@@ -1,0 +1,30 @@
+version: '2'
+
+volumes:
+    jenkins_home:
+        external: true
+
+services:
+    jenkins:
+        build:
+            context: .
+            args:
+                DOCKER_GID: ${DOCKER_GID}
+                DOCKER_ENGINE: ${DOCKER_ENGINE}
+                DOCKER_COMPOSE: ${DOCKER_COMPOSE}
+        volumes:
+            - jenkins_home:/var/jenkins_home
+        environment:
+            - DOCKER_HOST=tcp://socat:2375
+        links:
+            - socat
+        ports:
+            - "8080:8080"
+
+    socat:
+        image: bpack/socat
+        command: TCP4-LISTEN:2375,fork,reuseaddr UNIX-CONNECT:/var/run/docker.sock
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+        expose:
+            - "2375"
